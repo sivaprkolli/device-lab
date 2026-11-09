@@ -1,0 +1,17 @@
+{
+  "name": "mobile-device-farm",
+  "version": "1.0.0",
+  "description": "Appium Device Farm — hub and node manager",
+  "scripts": {
+    "hub":      "node scripts/farm-manager.js hub",
+    "node":     "node scripts/farm-manager.js node",
+    "farm":     "node scripts/farm-manager.js all",
+    "list":     "node scripts/farm-manager.js list",
+    "generate": "node scripts/farm-manager.js generate"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["appium", "device-farm", "hub", "node", "mobile-testing"],
+  "license": "MIT"
+}

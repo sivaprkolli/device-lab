@@ -1,0 +1,27 @@
+{
+  "hub": {
+    "id": "hub",
+    "host": "172.16.3.33",
+    "port": 31337,
+    "platform": "both",
+    "enableAuthentication": true,
+    "logFile": "logs/hub.log",
+    "keepAlive": 800,
+    "basePath": "/wd/hub"
+  },
+  "nodes": [
+    {
+      "id": "node-1",
+      "host": "172.16.2.69",
+      "port": 4723,
+      "platform": "both",
+      "apiKey": "admin_F5xySWXXc9YNvm",
+      "token": "88af5291-a615-4d3c-b0b5-b5f95a925d2c",
+      "wdaPath": "/Users/shivak/Desktop/MobileDeviceFarm/wda/wda-resign.ipa",
+      "logFile": "logs/node-1.log",
+      "keepAlive": 800,
+      "basePath": "/wd/hub",
+      "enabled": true
+    }
+  ]
+}
