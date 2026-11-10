@@ -75,23 +75,16 @@ function buildHubConfig(hub) {
  */
 function buildNodeConfig(node, hub) {
   const hubUrl = `http://${hub.host}:${hub.port}`;
-  const deviceFarm = {
-    platform: node.platform,
-    hub: hubUrl
-  };
-
-  // Point xcuitest driver at the pre-signed WDA on this machine
-  if (node.wdaPath) {
-    deviceFarm['pre-build-wda-path'] = node.wdaPath;
-  }
-
   return {
     server: {
       port: node.port,
       'base-path': node.basePath || '/wd/hub',
       'keep-alive-timeout': node.keepAlive || 800,
       plugin: {
-        'device-farm': deviceFarm
+        'device-farm': {
+          platform: node.platform,
+          hub: hubUrl
+        }
       }
     }
   };
@@ -260,8 +253,10 @@ function actionNode(farm, nodeId) {
   log(`Node config written → ${nodeCfgFile}`);
 
   const extraArgs = [];
-  if (node.apiKey) extraArgs.push(`--plugin-device-farm-access-key=${node.apiKey}`);
-  if (node.token)  extraArgs.push(`--plugin-device-farm-token=${node.token}`);
+  if (node.apiKey)     extraArgs.push(`--plugin-device-farm-access-key=${node.apiKey}`);
+  if (node.token)      extraArgs.push(`--plugin-device-farm-token=${node.token}`);
+  if (node.wdaPath)    extraArgs.push(`--plugin-device-farm-pre-build-wda-path=${node.wdaPath}`);
+  if (node.wdaBundleId) extraArgs.push(`--plugin-device-farm-wda-bundle-id=${node.wdaBundleId}`);
 
   freePort(node.port)
     .then(() => waitForHub(farm.hub))

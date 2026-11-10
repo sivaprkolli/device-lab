@@ -18,6 +18,7 @@
       "apiKey": "admin_F5xySWXXc9YNvm",
       "token": "88af5291-a615-4d3c-b0b5-b5f95a925d2c",
       "wdaPath": "/Users/shivak/Desktop/MobileDeviceFarm/wda/wda-resign.ipa",
+      "wdaBundleId": "com.moblab.test.xctrunner",
       "logFile": "logs/node-1.log",
       "keepAlive": 800,
       "basePath": "/wd/hub",
