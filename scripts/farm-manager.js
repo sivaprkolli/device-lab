@@ -75,16 +75,21 @@ function buildHubConfig(hub) {
  */
 function buildNodeConfig(node, hub) {
   const hubUrl = `http://${hub.host}:${hub.port}`;
+  const deviceFarm = {
+    platform: node.platform,
+    hub: hubUrl
+  };
+
+  // These are camelCase plugin properties — valid in the JSON config
+  if (node.wdaBundleId) deviceFarm['wdaBundleId'] = node.wdaBundleId;
+
   return {
     server: {
       port: node.port,
       'base-path': node.basePath || '/wd/hub',
       'keep-alive-timeout': node.keepAlive || 800,
       plugin: {
-        'device-farm': {
-          platform: node.platform,
-          hub: hubUrl
-        }
+        'device-farm': deviceFarm
       }
     }
   };
@@ -253,12 +258,14 @@ function actionNode(farm, nodeId) {
   log(`Node config written → ${nodeCfgFile}`);
 
   const extraArgs = [];
-  if (node.apiKey)     extraArgs.push(`--plugin-device-farm-access-key=${node.apiKey}`);
-  if (node.token)      extraArgs.push(`--plugin-device-farm-token=${node.token}`);
-  if (node.wdaPath)    extraArgs.push(`--plugin-device-farm-pre-build-wda-path=${node.wdaPath}`);
-  if (node.wdaBundleId) extraArgs.push(`--plugin-device-farm-wda-bundle-id=${node.wdaBundleId}`);
+  if (node.apiKey)  extraArgs.push(`--plugin-device-farm-access-key=${node.apiKey}`);
+  if (node.token)   extraArgs.push(`--plugin-device-farm-token=${node.token}`);
+  if (node.wdaPath) extraArgs.push(`--plugin-device-farm-pre-build-wda-path=${node.wdaPath}`);
+  // wdaBundleId goes in JSON config (camelCase), not CLI args
 
-  freePort(node.port)
+  // Startup sequence: kill stale go-ios tunnel → free port → wait for hub → start Appium
+  killStaleGoIOSTunnel()
+    .then(() => freePort(node.port))
     .then(() => waitForHub(farm.hub))
     .then(() => {
       const child = startAppium(
@@ -331,14 +338,39 @@ function freePort(port) {
     lsof.on('close', () => {
       const pidList = pids.trim().split('\n').filter(Boolean);
       if (pidList.length === 0) {
-        resolve(); // port already free
+        resolve();
         return;
       }
       log(`Port ${port} is in use by PID(s) ${pidList.join(', ')} — killing…`);
       const kill = spawn('kill', ['-9', ...pidList], { stdio: 'ignore' });
+      kill.on('close', () => setTimeout(resolve, 500));
+    });
+  });
+}
+
+/**
+ * Kill any stale go-ios tunnel processes left over from a previous session.
+ * The device-farm plugin allocates a dynamic tunnel-info-port at startup.
+ * If that port is already held, the tunnel fails and WDA becomes unreachable.
+ */
+function killStaleGoIOSTunnel() {
+  return new Promise((resolve) => {
+    log('Checking for stale go-ios tunnel processes…');
+    const check = spawn('pgrep', ['-f', 'go-ios.*tunnel'], { stdio: ['ignore', 'pipe', 'ignore'] });
+    let pids = '';
+    check.stdout.on('data', d => { pids += d.toString(); });
+    check.on('close', () => {
+      const pidList = pids.trim().split('\n').filter(Boolean);
+      if (pidList.length === 0) {
+        log('No stale go-ios tunnel processes found.');
+        resolve();
+        return;
+      }
+      log(`Killing stale go-ios tunnel PID(s): ${pidList.join(', ')}`);
+      const kill = spawn('kill', ['-9', ...pidList], { stdio: 'ignore' });
       kill.on('close', () => {
-        // Give the OS a moment to release the port
-        setTimeout(resolve, 500);
+        log('Stale go-ios tunnel processes cleared.');
+        setTimeout(resolve, 800); // give OS time to release the tunnel-info port
       });
     });
   });
