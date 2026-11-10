@@ -51,15 +51,19 @@ function loadFarm() {
  *                   [--plugin-device-farm-enable-authentication]
  */
 function buildHubConfig(hub) {
+  const deviceFarm = {
+    platform: hub.platform || 'both'
+  };
+
+  if (hub.wdaBundleId) deviceFarm['wdaBundleId'] = hub.wdaBundleId;
+
   return {
     server: {
       port: hub.port,
       'base-path': hub.basePath || '/wd/hub',
       'keep-alive-timeout': hub.keepAlive || 800,
       plugin: {
-        'device-farm': {
-          platform: hub.platform || 'both'
-        }
+        'device-farm': deviceFarm
       }
     }
   };

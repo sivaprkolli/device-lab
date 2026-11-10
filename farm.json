@@ -5,6 +5,7 @@
     "port": 31337,
     "platform": "both",
     "enableAuthentication": true,
+    "wdaBundleId": "com.moblab.test.xctrunner",
     "logFile": "logs/hub.log",
     "keepAlive": 800,
     "basePath": "/wd/hub"
